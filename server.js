@@ -3,8 +3,11 @@ const jwt = require("express-jwt");
 const jwksRsa = require("jwks-rsa");
 const { join } = require("path");
 const morgan = require("morgan");
+const axios = require("axios").default;
+const request = require("request");
 const app = express();
 const authConfig = require("./auth_config.json");
+const { token } = require("morgan");
 
 app.use(morgan("dev"));
 // Serve static assets from the /public folder
@@ -24,10 +27,37 @@ const checkJwt = jwt({
   algorithms: ["RS256"]
 });
 
+// Order History Function
+function recHist(callback) {
+  
+  const options = { method: 'POST',
+  url: 'https://dev-9obe8yjx.us.auth0.com/oauth/token',
+  headers: { 'content-type': 'application/json' },
+  body: '{"client_id":"ydKZ55jgSiLCzPQiPoDTO6IgjA8OXk4v","client_secret":"A-loyk_cEbT_rJY4Eg45ywDPcW12tDIZRJt-SD22UhsnSNGhGAIzPwkOBCLdbzvm","audience":"https://dev-9obe8yjx.us.auth0.com/api/v2/","grant_type":"client_credentials"}' };
+
+  request(options, function(error, response, body) {
+    if (!error && response.statusCode == 200) {
+      result = JSON.parse(body);
+      console.log(result.access_token)
+      return callback(result, false);
+    } else {
+      return callback(null, error);;
+    }
+  });
+};
+
+// Order History Endpoint
+app.get("/api/orderhistory", (req, res) => {
+  recHist(function(err, data){
+    if(err) return res.send(err);
+    res.send(data)
+  })
+});
+
 // API Endpoint
 app.get("/api/external", checkJwt, (req, res) => {
   res.send({
-    msg: "Your access token was successfully validated!"
+    msg: "success"
   });
 });
 
@@ -42,7 +72,7 @@ app.get("/*", (_, res) => {
 });
 
 // Listen on port 3000
-app.listen(3000, () => console.log("Application running on port 3000"));
+app.listen(3001, () => console.log("Application running on port 3001"));
 
 // Error Handling
 app.use(function(err, req, res, next) {

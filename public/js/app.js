@@ -39,25 +39,41 @@ const configureClient = async () => {
   });
 };
 
-// Call API Function
+// Call API Function to Order Pizzas
 const callApi = async () => {
-  try {
-    const token = await auth0.getTokenSilently();
+  const user = await auth0.getUser();
+  if (user.email_verified == true) {
+    try {
+      const token = await auth0.getTokenSilently();
+      const response = await fetch("/api/external", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
 
-    const response = await fetch("/api/external", {
-      headers: {
-        Authorization: `Bearer ${token}`
+      const responseData = await response.json();
+      const responseElement = document.getElementById("api-call-result");
+      if (responseData.msg == "success") {
+        responseElement.innerText = 'Success! Your driver Zaphod will be on his way shortly with your pizza.';
+      } else {
+        responseElement.innerText = 'Uh Oh! Something went wrong';
       }
-    });
-
-    const responseData = await response.json();
-
-    const responseElement = document.getElementById("api-call-result");
-
-    responseElement.innerText = JSON.stringify(responseData, {}, 2);
-  } catch (e) {
-    console.error(e);
+    } catch (e) {
+      console.error(e);
+    }
+  } else {
+      const responseElement = document.getElementById("api-call-result");
+      responseElement.innerText = "It looks like your email isn't verified. You need to have a verified email address to place an order. Please check your email and click the link to verify it.";
   }
+};
+
+const infoUpdate = async () => {
+  const response = await fetch("/api/orderhistory", {
+  });
+
+  // const responseData = await response.json();
+  const responseElement = document.getElementById("info-update-result");
+  responseElement.innerText = response
 };
 
 window.onload = async () => {
@@ -91,6 +107,7 @@ const updateUI = async () => {
     document.getElementById("btn-logout").disabled = !isAuthenticated;
     document.getElementById("btn-login").disabled = isAuthenticated;
     document.getElementById("btn-call-api").disabled = !isAuthenticated;
+    document.getElementById("btn-ord-hist").disabled = !isAuthenticated;
 
     // Show content only to logged in Users
     if (isAuthenticated) {
