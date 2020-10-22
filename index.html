@@ -12,6 +12,7 @@
     <button id="btn-login" disabled="true" onclick="login()">Log in</button>
     <button id="btn-logout" disabled="true" onclick="logout()">Log out</button>
     <button id="btn-call-api" disabled="true" onclick="callApi()">Call API</button>
+    <button id="btn-ord-hist" disabled="true" onclick="infoUpdate()">Update Info</button>
 
         <!-- Authenticated users Only-->
         <div class="hidden" id="gated-content">
@@ -27,6 +28,10 @@
             API Call Result
           </label>
           <pre id="api-call-result"></pre>
+          <label>
+            Userinfo Update
+          </label>
+          <pre id="info-update-result"></pre>
           <label>
             User profile:
           </label>
