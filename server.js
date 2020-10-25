@@ -8,6 +8,7 @@ const request = require("request");
 const app = express();
 const authConfig = require("./auth_config.json");
 const { token } = require("morgan");
+var bodyParser = require("body-parser");
 
 app.use(morgan("dev"));
 // Serve static assets from the /public folder
@@ -38,19 +39,56 @@ function recHist(callback) {
   request(options, function(error, response, body) {
     if (!error && response.statusCode == 200) {
       result = JSON.parse(body);
-      console.log(result.access_token)
-      return callback(result, false);
+      var resultToken = result.access_token
+      return callback(resultToken);
     } else {
       return callback(null, error);;
     }
   });
+
 };
 
 // Order History Endpoint
-app.get("/api/orderhistory", (req, res) => {
-  recHist(function(err, data){
-    if(err) return res.send(err);
-    res.send(data)
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.raw());
+app.post("/api/orderhistory", (req, res) => {
+  
+  const bodyData = req.body
+  const user_id = bodyData.userid
+  const order_time = bodyData.datetime
+  const order_num = "Order_" + Math.floor(100000 + Math.random() * 900000)
+  
+  recHist(function(result){
+    const options = { 
+      method: 'PATCH',
+      json: true,
+      url: 'https://dev-9obe8yjx.us.auth0.com/api/v2/users/' + user_id,
+      headers: {
+        'accept': 'application/json',
+        'Content-Type': 'application/json',
+        'authorization': 'Bearer ' + result
+      },
+      body: {
+        'app_metadata': {
+            [order_num] : [order_time]
+        }
+      }
+    }
+
+    request(options, function(error, response, body) {
+      if (!error && response.statusCode == 200) {
+        console.log(body)
+        res.send({
+          msg: "recorded"
+        })
+      } else {
+        console.log(error)
+        res.send({
+          msg: "error"
+        })
+      }
+    });
   })
 });
 

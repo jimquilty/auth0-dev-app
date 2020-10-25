@@ -44,6 +44,7 @@ const callApi = async () => {
   const user = await auth0.getUser();
   if (user.email_verified == true) {
     try {
+      //Place Order
       const token = await auth0.getTokenSilently();
       const response = await fetch("/api/external", {
         headers: {
@@ -58,6 +59,26 @@ const callApi = async () => {
       } else {
         responseElement.innerText = 'Uh Oh! Something went wrong';
       }
+
+      // Update Order History
+      const datetime = new Date();
+      const userInfo = {
+        'userid': user.sub,
+        'datetime': datetime
+      }
+
+      const histResponse = await fetch("/api/orderhistory", {
+        method: 'POST',
+        body: JSON.stringify(userInfo),
+        headers: {
+          'content-type': 'application/json'
+        }
+      });
+      const histResponseData = await histResponse.json();
+      if (histResponseData.msg == "recorded") {
+        const histResponseElement = document.getElementById("info-update-result");
+        histResponseElement.innerText = "Order History Updated"
+      }
     } catch (e) {
       console.error(e);
     }
@@ -65,15 +86,19 @@ const callApi = async () => {
       const responseElement = document.getElementById("api-call-result");
       responseElement.innerText = "It looks like your email isn't verified. You need to have a verified email address to place an order. Please check your email and click the link to verify it.";
   }
+  
+
 };
 
 const infoUpdate = async () => {
   const response = await fetch("/api/orderhistory", {
   });
 
+  const responseData = await response.json();
+
   // const responseData = await response.json();
   const responseElement = document.getElementById("info-update-result");
-  responseElement.innerText = response
+  responseElement.innerText = responseData.msg
 };
 
 window.onload = async () => {
